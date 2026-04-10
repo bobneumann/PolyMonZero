@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RootNamespace>PolyMonZero</RootNamespace>
+    <StartupObject>Sub Main</StartupObject>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>PolyMonZero</AssemblyName>
+    <ApplicationIcon />
+  </PropertyGroup>
+
+  <!-- Single-file publish: dotnet publish -r win-x64 -p:PublishSingleFile=true -->
+  <PropertyGroup Condition="'$(PublishSingleFile)'=='true'">
+    <SelfContained>true</SelfContained>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Import Include="System.Data" />
+    <Import Include="System.Drawing" />
+    <Import Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.*" />
+    <PackageReference Include="System.Text.Json" Version="8.*" />
+  </ItemGroup>
+
+</Project>

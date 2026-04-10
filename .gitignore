@@ -1,0 +1,12 @@
+# Build output
+src/PolyMonZero/bin/
+src/PolyMonZero/obj/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+
+# OS
+Thumbs.db
+desktop.ini
