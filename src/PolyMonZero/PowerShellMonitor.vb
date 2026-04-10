@@ -25,6 +25,12 @@ Public Class PowerShellMonitor
             If _RunSpace Is Nothing Then
                 _RunSpace = RunspaceFactory.CreateRunspace()
                 _RunSpace.Open()
+                ' Establish a valid working directory — bare runspaces have no CWD set,
+                ' which causes Path.Combine(null, path) exceptions in Test-Path and process spawning.
+                Using initPipe As Pipeline = _RunSpace.CreatePipeline(
+                    "Set-Location ([System.Environment]::GetFolderPath('System'))")
+                    initPipe.Invoke()
+                End Using
             End If
 
             _RunSpace.SessionStateProxy.SetVariable("Counters", True)
@@ -32,8 +38,11 @@ Public Class PowerShellMonitor
             _RunSpace.SessionStateProxy.SetVariable("messages", New String() {})
             _RunSpace.SessionStateProxy.SetVariable("Counter", New Object() {})
 
-            Using pipe As Pipeline = _RunSpace.CreatePipeline(_Script)
-                pipe.Invoke()
+            ' Use PowerShell.AddScript (not CreatePipeline) for proper script-scope semantics
+            Using ps As PowerShell = PowerShell.Create()
+                ps.Runspace = _RunSpace
+                ps.AddScript(_Script)
+                ps.Invoke()
             End Using
 
             Dim errlvlRaw = _RunSpace.SessionStateProxy.GetVariable("errlvl")
@@ -63,14 +72,17 @@ Public Class PowerShellMonitor
 
             ' Parse $Counter = @(,@("name", value), ...) or @(,@("name", value, min, max), ...)
             ' The second pipeline emits pscustomobjects with N, V, Mn, Mx, HR fields.
-            Using cvPipe As Pipeline = _RunSpace.CreatePipeline(
-                "if ($Counter) { foreach ($__p in $Counter) {" &
-                " [pscustomobject]@{N=[string]$__p[0];V=[double]$__p[1];" &
-                " Mn=if($__p.Count -ge 4){[double]$__p[2]}else{0.0};" &
-                " Mx=if($__p.Count -ge 4){[double]$__p[3]}else{0.0};" &
-                " HR=($__p.Count -ge 4)} } }")
-                Dim cvResults = cvPipe.Invoke()
+            Using cvPs As PowerShell = PowerShell.Create()
+                cvPs.Runspace = _RunSpace
+                cvPs.AddScript(
+                    "if ($Counter) { foreach ($__p in $Counter) {" &
+                    " [pscustomobject]@{N=[string]$__p[0];V=[double]$__p[1];" &
+                    " Mn=if($__p.Count -ge 4){[double]$__p[2]}else{0.0};" &
+                    " Mx=if($__p.Count -ge 4){[double]$__p[3]}else{0.0};" &
+                    " HR=($__p.Count -ge 4)} } }")
+                Dim cvResults = cvPs.Invoke()
                 For Each pso In cvResults
+
                     If pso Is Nothing Then Continue For
                     Dim n = pso.Properties("N")?.Value?.ToString()
                     Dim vProp = pso.Properties("V")?.Value
