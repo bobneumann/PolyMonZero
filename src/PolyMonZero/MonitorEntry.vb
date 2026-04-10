@@ -86,6 +86,12 @@ Public Class MonitorEntry
         _Timer.Stop()
         Timer_Tick(Nothing, EventArgs.Empty)
     End Sub
+
+    ''' <summary>Change the polling interval and apply it to the live timer immediately.</summary>
+    Public Sub UpdateInterval(newSec As Integer)
+        PollingIntervalSec = Math.Max(1, newSec)
+        _Timer.Interval = PollingIntervalSec * 1000
+    End Sub
 #End Region
 
 #Region "Timer / Execution"

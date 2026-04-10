@@ -10,3 +10,8 @@ src/PolyMonZero/obj/
 # OS
 Thumbs.db
 desktop.ini
+
+# Release publish artifacts (distributed via GitHub Releases, not committed)
+publish/
+publish-fdd/
+publish-fdd2/
